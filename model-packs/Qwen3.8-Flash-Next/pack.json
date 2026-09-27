@@ -1,0 +1,414 @@
+{
+  "schema_version": 1,
+  "id": "qwen38-flashnext-b70",
+  "name": "Qwen3.8-Flash-Next B70 Pack (Base / MTP3)",
+  "version": "1.0.0",
+  "models": [
+    {
+      "id": "qwen38-flashnext-w4a16",
+      "name": "Qwen3.8-Flash-Next W4A16",
+      "kind": "target",
+      "repo": "devan-carlin/Qwen3.8-Flash-Next-W4A16",
+      "revision": "40b8f18df4d4a32cb6e687a51c78207e5e438522",
+      "gated": false,
+      "files": [
+        {
+          "path": ".gitattributes",
+          "size": 1635
+        },
+        {
+          "path": "LICENSE",
+          "size": 3235
+        },
+        {
+          "path": "README.md",
+          "size": 6393
+        },
+        {
+          "path": "chat_template.jinja",
+          "size": 9993
+        },
+        {
+          "path": "config.json",
+          "size": 5122
+        },
+        {
+          "path": "generation_config.json",
+          "size": 202
+        },
+        {
+          "path": "merges.txt",
+          "size": 3353259
+        },
+        {
+          "path": "model-00001.safetensors",
+          "size": 4877519352
+        },
+        {
+          "path": "model-00002.safetensors",
+          "size": 4714864048
+        },
+        {
+          "path": "model-00003.safetensors",
+          "size": 4301422032
+        },
+        {
+          "path": "model-00004.safetensors",
+          "size": 4335105768
+        },
+        {
+          "path": "model-00005.safetensors",
+          "size": 4877980264
+        },
+        {
+          "path": "model-00006.safetensors",
+          "size": 4429075824
+        },
+        {
+          "path": "model-00007.safetensors",
+          "size": 4297284456
+        },
+        {
+          "path": "model-00008.safetensors",
+          "size": 4341767576
+        },
+        {
+          "path": "model-00009.safetensors",
+          "size": 4303806816
+        },
+        {
+          "path": "model-00010.safetensors",
+          "size": 4307027200
+        },
+        {
+          "path": "model-00011.safetensors",
+          "size": 5141068776
+        },
+        {
+          "path": "model-00012.safetensors",
+          "size": 4676071736
+        },
+        {
+          "path": "model-00013.safetensors",
+          "size": 4416367136
+        },
+        {
+          "path": "model-00014.safetensors",
+          "size": 4337153456
+        },
+        {
+          "path": "model-00015.safetensors",
+          "size": 4301345176
+        },
+        {
+          "path": "model-00016.safetensors",
+          "size": 4301749520
+        },
+        {
+          "path": "model-00017.safetensors",
+          "size": 5435728168
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "size": 22974018
+        },
+        {
+          "path": "ple_table_qwen4exp.pt",
+          "size": 102400493290
+        },
+        {
+          "path": "preprocessor_config.json",
+          "size": 390
+        },
+        {
+          "path": "tokenizer.json",
+          "size": 12809320
+        },
+        {
+          "path": "tokenizer_config.json",
+          "size": 17928
+        },
+        {
+          "path": "video_preprocessor_config.json",
+          "size": 385
+        },
+        {
+          "path": "vocab.json",
+          "size": 6722759
+        }
+      ],
+      "mount_path": "/models/devan-carlin__Qwen3.8-Flash-Next-W4A16",
+      "launch": {
+        "docker_args": [],
+        "environment": {},
+        "command_args": [
+          "/models/devan-carlin__Qwen3.8-Flash-Next-W4A16",
+          "--served-model-name",
+          "devan-carlin/Qwen3.8-Flash-Next-W4A16"
+        ]
+      }
+    }
+  ],
+  "runtimes": [
+    {
+      "id": "qwen38-flashnext-runtime-1.0.0",
+      "image": "ghcr.io/wu1ff/qwen38-flashnext-b70:1.0.0",
+      "digest": "sha256:85512b52c09fa660a2e7fe441417129e7c47fac727fd85f66ccea6b65e0a9122",
+      "registry": "ghcr.io/wu1ff/qwen38-flashnext-b70@sha256:85512b52c09fa660a2e7fe441417129e7c47fac727fd85f66ccea6b65e0a9122",
+      "container_port": 8000,
+      "health_path": "/health",
+      "launch": {
+        "docker_args": [
+          "--device=/dev/dri:/dev/dri",
+          "--mount",
+          "type=bind,source=/dev/dri/by-path,target=/dev/dri/by-path,readonly",
+          "--ipc=host",
+          "--shm-size=32g",
+          "--security-opt",
+          "seccomp=unconfined",
+          "--security-opt",
+          "label=disable"
+        ],
+        "environment": {
+          "CCL_SYCL_ALLGATHERV_TMP_BUF": "1",
+          "CCL_SYCL_ALLREDUCE_TMP_BUF": "1",
+          "HF_DATASETS_OFFLINE": "1",
+          "HF_HOME": "/work/hf-cache",
+          "HF_HUB_OFFLINE": "1",
+          "LD_PRELOAD": "/opt/b70-residency-shim/libl0_peer_residency_shim.so",
+          "PLE_TABLE_PATH": "/models/devan-carlin__Qwen3.8-Flash-Next-W4A16/ple_table_qwen4exp.pt",
+          "TMPDIR": "/work/tmp",
+          "TRANSFORMERS_OFFLINE": "1",
+          "TRITON_CACHE_DIR": "/work/triton-cache",
+          "VLLM_CACHE_ROOT": "/work/vllm-cache",
+          "VLLM_TARGET_DEVICE": "xpu",
+          "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
+          "VLLM_XPU_ENABLE_XPU_GRAPH": "1",
+          "XDG_CACHE_HOME": "/work/xdg-cache",
+          "ZE_FLAT_DEVICE_HIERARCHY": "FLAT"
+        },
+        "command": [
+          "vllm",
+          "serve",
+          "--host",
+          "0.0.0.0",
+          "--port",
+          "8000",
+          "--dtype",
+          "bfloat16",
+          "--enable-expert-parallel",
+          "--trust-remote-code",
+          "--max-num-batched-tokens",
+          "256",
+          "--max-num-seqs",
+          "4",
+          "--limit-mm-per-prompt",
+          "{\"image\":2,\"video\":0}",
+          "--compilation-config",
+          "{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"cudagraph_capture_sizes\":[1,2,4,8,256]}",
+          "--cudagraph-metrics"
+        ]
+      }
+    }
+  ],
+  "modes": [
+    {
+      "id": "base",
+      "display_name": "Base",
+      "assistants": [],
+      "launch": {
+        "docker_args": [],
+        "environment": {},
+        "command_args": [
+          "--gpu-memory-utilization",
+          "0.85"
+        ]
+      }
+    },
+    {
+      "id": "mtp3",
+      "display_name": "MTP3",
+      "assistants": [],
+      "launch": {
+        "docker_args": [],
+        "environment": {},
+        "command_args": [
+          "--gpu-memory-utilization",
+          "0.91",
+          "--speculative-config",
+          "{\"method\":\"mtp\",\"num_speculative_tokens\":3}"
+        ]
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "id": "w4a16-base-tp4-32768",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 32768,
+      "mode": "base",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "32768"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-base-tp4-65536",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 65536,
+      "mode": "base",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "65536"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-base-tp4-131072",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 131072,
+      "mode": "base",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "131072"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-base-tp4-262144",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 262144,
+      "mode": "base",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "262144"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-mtp3-tp4-32768",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 32768,
+      "mode": "mtp3",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "32768"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-mtp3-tp4-65536",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 65536,
+      "mode": "mtp3",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "65536"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-mtp3-tp4-131072",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 131072,
+      "mode": "mtp3",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "131072"
+        ]
+      }
+    },
+    {
+      "id": "w4a16-mtp3-tp4-262144",
+      "model_id": "qwen38-flashnext-w4a16",
+      "runtime_id": "qwen38-flashnext-runtime-1.0.0",
+      "cards": 4,
+      "tensor_parallel": 4,
+      "context": 262144,
+      "mode": "mtp3",
+      "launch": {
+        "docker_args": [],
+        "environment": {
+          "ZE_AFFINITY_MASK": "0,1,2,3"
+        },
+        "command_args": [
+          "--tensor-parallel-size",
+          "4",
+          "--max-model-len",
+          "262144"
+        ]
+      }
+    }
+  ]
+}

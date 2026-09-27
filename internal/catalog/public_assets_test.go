@@ -33,7 +33,7 @@ const (
 // publishedPackDirectories lists every pack directory that must have a
 // matching tracked catalog entry. A pack's release tag is the lowercased
 // directory name plus -v<version> (Qwen3.8-27B -> qwen3.8-27b-v1.0.1).
-var publishedPackDirectories = []string{"Qwen3.8-27B", "Qwen3.6-35B-A3B"}
+var publishedPackDirectories = []string{"Qwen3.8-27B", "Qwen3.6-35B-A3B", "Qwen3.8-Flash-Next"}
 
 // Pack distribution archives are generated release artifacts and are not
 // committed. The tests build them from the source pack with the established
