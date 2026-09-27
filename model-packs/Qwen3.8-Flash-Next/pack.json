@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "qwen38-flashnext-b70",
   "name": "Qwen3.8-Flash-Next B70 Pack (Base / MTP3)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "models": [
     {
       "id": "qwen38-flashnext-w4a16",
@@ -206,7 +206,12 @@
           "{\"image\":2,\"video\":0}",
           "--compilation-config",
           "{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"cudagraph_capture_sizes\":[1,2,4,8,256]}",
-          "--cudagraph-metrics"
+          "--cudagraph-metrics",
+          "--enable-auto-tool-choice",
+          "--tool-call-parser",
+          "qwen3_xml",
+          "--reasoning-parser",
+          "qwen3"
         ]
       }
     }

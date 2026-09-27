@@ -1332,6 +1332,44 @@ Pack contracts live in `B70-LLM-Controller-Model-Packs/Qwen3.8-Flash-Next/`
 (dev) and `B70-Controller/model-packs/Qwen3.8-Flash-Next/` (published);
 release tag `qwen3.8-flash-next-v1.0.0`.
 
+## Tool calling — the 1.0.1 launch-contract correction (2026-09-27)
+
+A chat frontend sent the released 1.0.0 server `tools` +
+`"tool_choice": "auto"` and got HTTP 400 (`"auto" tool choice requires
+--enable-auto-tool-choice and --tool-call-parser to be set` — the static
+guard in `vllm/renderers/online_renderer.py`). The runtime was never at
+fault; the launch contract omitted vLLM's tool flags.
+
+**Static audit of the exact pinned image** (vLLM 0.30.0, transformers 5.16.1,
+model revision `40b8f18d…`): `qwen3_xml` is registered
+(`Qwen3EngineToolParser`, combined-engine adapter over `vllm/parser/qwen3.py`)
+and imports clean; `qwen3` is registered as the reasoning parser
+(`Qwen3ParserReasoningAdapter`); the standalone `chat_template.jinja` (which
+takes precedence over the older embedded template) renders the complete Qwen3
+XML tool loop — `<tools>` system block, `<tool_call><function=…><parameter=…>`
+assistant calls, `<tool_response>` tool results, and continued generation —
+in exactly the syntax the parser engine defines; Base and MTP3 share the one
+tokenizer/template. No custom template and no other flags are required.
+
+**Fix**: pack **1.0.1**, launch-contract only — three flags added once at the
+shared runtime layer of `pack.json` (`--enable-auto-tool-choice`,
+`--tool-call-parser qwen3_xml`, `--reasoning-parser qwen3`), inherited
+identically by both modes and all 8 profiles. Runtime id, image tag, and
+digest are **unchanged** (`85512b52…`); no rebuild, no GHCR push (the 1.0.4
+vision-flag pack-only precedent). Validator gained hard assertions for the
+parser pair and per-profile inheritance; render-diff proved the delta is
+exactly those five command tokens.
+
+**Live proof** (b70ctl path, 262144, `runtime/pack-smoke-1.0.1/`): Base
+15/15 and MTP3 16/16 — the original 400 shape now returns 200 with a valid
+OpenAI `tool_calls` structure (name + JSON arguments exact), tool-result
+round trip coherent, streaming tool calls assemble correctly, `tool_choice:
+"none"` stays plain text, reasoning/content separation works in stream and
+non-stream form (vLLM 0.30 names the field `reasoning`), ZEBRA-42 vision and
+APC intact, MTP3 3-draft invariant exact (408 = 3×136), clean logs, 4/4
+devices. Full record: `docs/TOOL_CALLING_1.0.1.md`; release tag
+`qwen3.8-flash-next-v1.0.1`.
+
 ## Evidence index (breadcrumbs)
 
 | Stage | Document | Evidence root |
@@ -1360,8 +1398,8 @@ release tag `qwen3.8-flash-next-v1.0.0`.
 | Deep-prefill DEVICE_LOST investigation | `docs/DEEP_PREFILL_DEVICE_LOST.md`, `DEEP_PREFILL_APC_DISCRIMINATOR.md`, `ALIGN_STATE_BLOCK_LIFETIME.md`, `ALIGN_OBS_INSTRUMENTED_RUN.md`, `PW_ALLOC_LOCALIZATION_RUN.md` | `runtime/pw-rootcause/`, `runtime/align-obs*/`, `runtime/pwobs*/` |
 | GDN index-64 fix + sibling qualification | `docs/GDN_CONV_INDEX64_FIX.md` | `build/gdn-index64/` (+ `PROMOTION.json`), `runtime/mtp3-gdn-guard/`, `runtime/mtp3-gdn-index64-c1/`, `runtime/gdn-index64-base-c1/` |
 | Unified runtime promotion | `RUNTIME_RECIPE.md` unified-runtime section | `build/gdn-index64/PROMOTION.json`, `build/gdn-index64/promotion-inspect-{pre,post}.txt` |
+| Tool calling 1.0.1 (launch-contract fix) | `docs/TOOL_CALLING_1.0.1.md` | `runtime/pack-smoke-1.0.1/` |
 | Launchers | `scripts/launch-*.sh` (unified Base posture: `launch-gdn-index64-base.sh`; unified MTP3: `launch-gdn-index64-mtp3.sh`; frozen fallbacks: `launch-hcsplit-c1.sh`, `launch-full-c1.sh`, `launch-mtp3-c1.sh`) | — |
-
 ---
 
 # Pack addendum — `qwen38-flashnext-b70` 1.0.0 (2026-09-27)
@@ -1458,3 +1496,84 @@ campaign workspace evidence roots indexed above.
 Deferred (explicitly not in this release): concurrency tuning
 (`max_num_seqs 4` unchanged), video (unqualified, `video:0`), MTP1 as a pack
 mode, any upstream submission.
+
+
+---
+
+# Pack addendum — `qwen38-flashnext-b70` 1.0.1 (2026-09-27)
+
+A chat frontend sent the 1.0.0 server `tools` + `"tool_choice": "auto"` and
+received HTTP 400 — vLLM's static guard in `renderers/online_renderer.py`
+rejects auto tool choice when no tool parser is configured. The runtime was
+healthy; the 1.0.0 launch contract had omitted vLLM's tool-calling flags.
+Pack 1.0.1 is the launch-contract correction. **Nothing about the runtime
+image changed**: same runtime id `qwen38-flashnext-runtime-1.0.0`, same image
+tag `ghcr.io/wu1ff/qwen38-flashnext-b70:1.0.0`, same manifest digest
+`sha256:85512b52…` — no rebuild, no GHCR push (the 1.0.4 vision-flag
+pack-only precedent; no image tag proliferation).
+
+## Static audit (the exact pinned stack, no inference from upstream)
+
+- `qwen3_xml` registered in `vllm/tool_parsers/__init__.py` →
+  `Qwen3EngineToolParser` (adapter over the combined Qwen3 parse engine
+  `vllm/parser/qwen3.py`); registry import verified in-image.
+- `qwen3` registered in `vllm/reasoning/__init__.py` →
+  `Qwen3ParserReasoningAdapter`; import verified. The engine defines
+  `<think>`/`</think>` and treats `<tool_call>` as an implicit reasoning end —
+  tool and reasoning parsing are one designed combination.
+- The pinned revision's standalone `chat_template.jinja` (9,993 B; takes
+  precedence over the older embedded template under transformers 5.16.1) was
+  rendered in-image with a full tool conversation: tool definitions
+  (`<tools>` system block), assistant tool calls
+  (`<tool_call><function=…><parameter=…></parameter></function></tool_call>`),
+  `tool` role results (`<tool_response>` under a user turn), and continued
+  generation after results — byte-for-byte the syntax the `qwen3_xml` parser
+  engine defines. Base and MTP3 share the one tokenizer/template (single
+  model + runtime entry in the pack).
+- No custom chat template, no further flags. The three flags below all exist
+  on the pinned CLI; the only cross-flag constraint is
+  "auto requires --tool-call-parser" (satisfied).
+
+## The delta
+
+```diff
+- "version": "1.0.0"
++ "version": "1.0.1"
+  runtimes[0].launch.command:
++   "--enable-auto-tool-choice"
++   "--tool-call-parser", "qwen3_xml"
++   "--reasoning-parser", "qwen3"
+```
+
+Flags live once at the shared runtime layer, inherited identically by both
+modes and all 8 profiles (the validator's duplicate-flag rejection makes
+double-placement structurally impossible). `validate.py` additionally pins
+version 1.0.1, repins `PACK_SHA256` (`12566bdc…` → `5cba8a7c…`), and asserts
+the parser pair plus per-profile inheritance; render-diff 1.0.0 → 1.0.1
+proved the complete delta is exactly those five command tokens across all 8
+profiles with every other render field and the digest byte-identical.
+
+## Qualification (b70ctl path, 262144, released digest)
+
+Both max-context boots on the installed 1.0.1 pack (`runtime.BuildLaunch` →
+`runtime.Start`; container args carry the three flags):
+
+- **Base 15/15**: health 200 (~5.5 min); no-tools chat coherent; tools +
+  `tool_choice:"auto"` → HTTP 200 with OpenAI `tool_calls` (name
+  `calculator`, arguments `{"expression": "17*23+5"}` JSON-exact);
+  tool-result round trip (role `tool` → "…is **396**."); streaming tool call
+  assembles with `finish_reason="tool_calls"`; `tool_choice:"none"` plain
+  text; reasoning separation in stream + non-stream (field `reasoning`, zero
+  raw tag leakage); ZEBRA-42 OCR exact; APC hit delta 2,496/2,698 with exact
+  recall; zero spec counters; clean logs; 4/4 devices.
+- **MTP3 16/16**: depth-3 active; 3-draft invariant exact (408 = 3×136);
+  the same tool surface green end-to-end; APC hit 1,664/2,698; health 200;
+  zero runtime/spec/parser exceptions; 4/4 devices.
+- Server log on both boots: `enable_auto_tool_choice: True`,
+  `tool_call_parser: 'qwen3_xml'`, `reasoning_parser: 'qwen3'`,
+  `"auto" tool choice has been enabled.`, `enable_prefix_caching=True`.
+
+Evidence: campaign workspace `docs/TOOL_CALLING_1.0.1.md` +
+`runtime/pack-smoke-1.0.1/`. Claim scope: the tested client-side calculator
+schema at 262144 through the b70ctl pack path; lower contexts inherit by the
+ladder law. Deferred as before: concurrency tuning, video, MTP1-as-pack-mode.

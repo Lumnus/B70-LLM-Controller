@@ -37,6 +37,12 @@ Dense QSA is a correctness requirement for this checkpoint: the pinned config sh
 
 Vision is qualified (image modality, `{"image":2,"video":0}`); **video is not qualified** and stays at 0.
 
+## Tool calling (1.0.1)
+
+OpenAI-compatible automatic tool calling is part of the qualified launch contract (pack 1.0.1; the 1.0.0 pack omitted the flags and rejected `tool_choice:"auto"` with HTTP 400). The shared runtime layer of `pack.json` adds `--enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3` — one set of flags inherited identically by Base and MTP3 and every profile; the runtime image is unchanged from 1.0.0 (same digest `85512b52…`, no rebuild, no new GHCR tag).
+
+Both parsers ship inside the pinned image, and the model's own chat template emits exactly the Qwen3 XML tool syntax the parser reads — no custom template, no other flags. What was tested and qualified at 262144 through the normal b70ctl path, on both Base and MTP3: `tools` + `tool_choice:"auto"` returning a valid OpenAI `tool_calls` structure (correct function name, JSON-exact arguments), tool-result round trip with the `tool` role, streaming tool calls, `tool_choice:"none"` returning plain text, and reasoning/content separation (vLLM 0.30 exposes the thinking under the message's `reasoning` field). Ordinary chat, vision, and prefix caching were regression-checked in the same smokes. Claim scope is the tested surface — a client-side calculator function schema; no claim about arbitrary tool schemas or structured outputs.
+
 ## Performance
 
 Retained qualified results from the promoted unified runtime (BetterBench v0.6.0, 32K contract, temperature 0.7, single stream unless noted), not new measurements. Test host: 4× Intel Arc Pro B70 32 GB.
