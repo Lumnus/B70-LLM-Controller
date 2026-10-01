@@ -1577,3 +1577,9 @@ Evidence: campaign workspace `docs/TOOL_CALLING_1.0.1.md` +
 `runtime/pack-smoke-1.0.1/`. Claim scope: the tested client-side calculator
 schema at 262144 through the b70ctl pack path; lower contexts inherit by the
 ladder law. Deferred as before: concurrency tuning, video, MTP1-as-pack-mode.
+
+# Source patch publication — pack 1.0.2
+
+The [published patch index](patches/README.md) now ships inside the model-pack archive with the exact retained vLLM, vllm-xpu-kernels, serving-packaging and B70 residency-shim source needed to account for the promoted runtime. The provenance chain is the pinned vLLM 0.30.0 XPU image (`sha256:e4446310…`) → base-c5 → full-c1 → hcsplit-c1 → astra-cumulative/mtp3-c1 → gdn-index64-c1 → the unchanged production packaging layer. The native patch targets vllm-xpu-kernels 0.1.14.1 commit `6d92b1bfbf32767ecda8e819613eb151e70030ad`. Each patch README identifies its source base, affected files, stage and retained authority; `patches/SHA256SUMS` records distributed bytes.
+
+Pack 1.0.2 changes only the pack version, documentation and source distribution. The image remains `ghcr.io/wu1ff/qwen38-flashnext-b70:1.0.0` (`sha256:85512b52c09fa660a2e7fe441417129e7c47fac727fd85f66ccea6b65e0a9122`). The model revision, modes, eight profile command lines, environment and mounts are identical to 1.0.1. The release archive includes `README.md`, `RUNTIME_RECIPE.md`, `pack.json` and `patches/**`.

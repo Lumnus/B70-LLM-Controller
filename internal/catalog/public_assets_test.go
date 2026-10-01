@@ -8,12 +8,14 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -37,7 +39,7 @@ var publishedPackDirectories = []string{"Qwen3.8-27B", "Qwen3.6-35B-A3B", "Qwen3
 
 // Pack distribution archives are generated release artifacts and are not
 // committed. The tests build them from the source pack with the established
-// normalization: the pack's three files in sorted order, regular mode 0644,
+// normalization: the pack's distributed files in sorted order, regular mode 0644,
 // epoch mtime, zero ownership, GNU tar format, and a nameless gzip stream —
 // byte-identical output for identical pack contents.
 func writePackArchive(t *testing.T, packDirectory, destination string) {
@@ -48,7 +50,7 @@ func writePackArchive(t *testing.T, packDirectory, destination string) {
 	}
 	compressed := gzip.NewWriter(output)
 	archive := tar.NewWriter(compressed)
-	for _, name := range []string{"README.md", "RUNTIME_RECIPE.md", "pack.json"} {
+	for _, name := range packArchiveNames(t, packDirectory) {
 		data, err := os.ReadFile(filepath.Join(packDirectory, name))
 		if err != nil {
 			t.Fatal(err)
@@ -76,6 +78,91 @@ func writePackArchive(t *testing.T, packDirectory, destination string) {
 	}
 	if err := output.Close(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func packArchiveNames(t *testing.T, packDirectory string) []string {
+	t.Helper()
+	names := []string{"README.md", "RUNTIME_RECIPE.md", "pack.json"}
+	patchRoot := filepath.Join(packDirectory, "patches")
+	if _, err := os.Stat(patchRoot); os.IsNotExist(err) {
+		return names
+	} else if err != nil {
+		t.Fatal(err)
+	}
+	err := filepath.WalkDir(patchRoot, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("pack patch entry %s is not a regular file", path)
+		}
+		relative, err := filepath.Rel(packDirectory, path)
+		if err != nil {
+			return err
+		}
+		names = append(names, filepath.ToSlash(relative))
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(names)
+	return names
+}
+
+func TestFlashNextSourceArchiveLoad(t *testing.T) {
+	packDirectory := filepath.Join("..", "..", "model-packs", "Qwen3.8-Flash-Next")
+	archivePath := filepath.Join(t.TempDir(), "flashnext-source.tar.gz")
+	writePackArchive(t, packDirectory, archivePath)
+	archiveBytes, err := os.ReadFile(archivePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := archiveServer(t, archiveBytes)
+	defer server.Close()
+	entry := catalogEntry(server.URL, archiveBytes, "qwen38-flashnext-b70", "Qwen3.8-Flash-Next B70 Pack (Base / MTP3)", "1.0.2")
+	client := &Client{HTTPClient: server.Client()}
+	acquired, err := client.Acquire(context.Background(), t.TempDir(), entry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer acquired.Close()
+
+	want := packArchiveNames(t, packDirectory)
+	got := packArchiveNames(t, acquired.Path)
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("extracted files = %v, want %v", got, want)
+	}
+	sums, err := os.ReadFile(filepath.Join(acquired.Path, "patches", "SHA256SUMS"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	count := 0
+	for _, line := range strings.Split(strings.TrimSpace(string(sums)), "\n") {
+		parts := strings.SplitN(line, "  ", 2)
+		if len(parts) != 2 {
+			t.Fatalf("invalid patch checksum line %q", line)
+		}
+		data, err := os.ReadFile(filepath.Join(acquired.Path, "patches", parts[1]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		actual := fmt.Sprintf("%x", sha256.Sum256(data))
+		if actual != parts[0] {
+			t.Fatalf("patch checksum mismatch: %s", parts[1])
+		}
+		count++
+	}
+	if count != len(want)-4 { // three root files plus patches/SHA256SUMS
+		t.Fatalf("patch checksum count = %d, want %d", count, len(want)-4)
 	}
 }
 

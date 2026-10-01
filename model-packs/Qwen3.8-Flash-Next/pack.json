@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "qwen38-flashnext-b70",
   "name": "Qwen3.8-Flash-Next B70 Pack (Base / MTP3)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "models": [
     {
       "id": "qwen38-flashnext-w4a16",

@@ -70,6 +70,10 @@ If the image is missing, `b70ctl` pulls that immutable reference and verifies th
 
 The runtime mounts the B70 devices (`/dev/dri`) plus one fixed read-only bind of `/dev/dri/by-path` so serving resolves cards by their stable device paths. That exact bind is the only host mount the pack is allowed to request; `b70ctl` rejects any other pack-controlled mount. All caches live inside the container (`/work/*`).
 
+## Source patches (1.0.2)
+
+The pack now distributes the [exact source patches and build recipes](patches/README.md) behind the published Flash-Next B70 runtime. This is a source and provenance release: the production image remains `ghcr.io/wu1ff/qwen38-flashnext-b70:1.0.0` at digest `sha256:85512b52c09fa660a2e7fe441417129e7c47fac727fd85f66ccea6b65e0a9122`, and all eight profile launch settings remain those of pack 1.0.1.
+
 ## Runtime recipe
 
 For the runtime build history, compatibility work, qualified launch contract, and technical provenance, see [RUNTIME_RECIPE.md](RUNTIME_RECIPE.md).
